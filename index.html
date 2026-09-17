@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>FINDIT — Lost & Found SMP Negeri 4 Kalasan</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  background:#f3fff6;
+  color:#244b31;
+  padding-bottom:100px;
+}
+
+header{
+  background:#b9e8c8;
+  padding:24px 15px;
+  text-align:center;
+  border-bottom:3px solid #91d5a8;
+}
+
+header h1{
+  font-size:28px;
+}
+
+header p{
+  margin-top:6px;
+  color:#42694e;
+}
+
+.container{
+  width:92%;
+  max-width:700px;
+  margin:20px auto;
+}
+
+.search{
+  background:white;
+  padding:15px;
+  border-radius:16px;
+  box-shadow:0 3px 12px rgba(0,0,0,.08);
+  margin-bottom:20px;
+}
+
+input,select,textarea{
+  width:100%;
+  padding:12px;
+  border:1px solid #c7dfce;
+  border-radius:10px;
+  margin-top:7px;
+  margin-bottom:12px;
+  font-size:14px;
+}
+
+textarea{
+  min-height:90px;
+  resize:vertical;
+}
+
+.filters{
+  display:flex;
+  gap:8px;
+}
+
+.filters select{
+  flex:1;
+}
+
+.card{
+  background:white;
+  border-radius:18px;
+  overflow:hidden;
+  margin-bottom:20px;
+  box-shadow:0 4px 15px rgba(0,0,0,.08);
+}
+
+.card img{
+  width:100%;
+  height:300px;
+  object-fit:cover;
+  display:block;
+}
+
+.no-photo{
+  height:300px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#e9f8ed;
+  color:#75917c;
+}
+
+.content{
+  padding:17px;
+}
+
+.status{
+  display:inline-block;
+  padding:7px 11px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.lost{
+  background:#ffe0e0;
+  color:#c43c3c;
+}
+
+.found{
+  background:#d9f6df;
+  color:#258044;
+}
+
+.content h2{
+  font-size:19px;
+  margin-bottom:8px;
+}
+
+.content p{
+  font-size:14px;
+  line-height:1.5;
+  margin-bottom:6px;
+}
+
+.plus{
+  position:fixed;
+  bottom:25px;
+  left:50%;
+  transform:translateX(-50%);
+  width:62px;
+  height:62px;
+  border:none;
+  border-radius:50%;
+  background:#65bd80;
+  color:white;
+  font-size:35px;
+  box-shadow:0 5px 15px rgba(0,0,0,.2);
+  z-index:20;
+}
+
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  z-index:30;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+}
+
+.modal-box{
+  width:100%;
+  max-width:500px;
+  max-height:90vh;
+  overflow-y:auto;
+  background:white;
+  border-radius:20px;
+  padding:22px;
+}
+
+.modal-box h2{
+  text-align:center;
+  margin-bottom:15px;
+}
+
+.close{
+  float:right;
+  border:none;
+  background:none;
+  font-size:25px;
+  cursor:pointer;
+}
+
+.choice{
+  width:100%;
+  padding:16px;
+  margin:7px 0;
+  border:none;
+  border-radius:12px;
+  background:#e3f7e9;
+  color:#275d38;
+  font-size:15px;
+  font-weight:bold;
+}
+
+.submit{
+  width:100%;
+  border:none;
+  border-radius:11px;
+  padding:13px;
+  background:#65bd80;
+  color:white;
+  font-weight:bold;
+  font-size:15px;
+  cursor:pointer;
+}
+
+.submit:disabled{
+  opacity:.6;
+}
+
+.photo-btn{
+  display:block;
+  width:100%;
+  padding:12px;
+  border:1px solid #b9dfc3;
+  border-radius:10px;
+  background:#edf9f0;
+  color:#326443;
+  text-align:center;
+  margin-bottom:8px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.hidden{
+  display:none;
+}
+
+.preview{
+  width:100%;
+  max-height:250px;
+  object-fit:cover;
+  border-radius:12px;
+  margin-bottom:10px;
+  display:none;
+}
+
+.empty{
+  text-align:center;
+  padding:30px;
+  color:#75917c;
+}
+
+.loading{
+  text-align:center;
+  padding:30px;
+}
+
+.claim-info{
+  background:#edf9f0;
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:15px;
+  font-size:14px;
+}
+
+.success-box{
+  text-align:center;
+  padding:25px 10px;
+}
+
+.success-box h2{
+  color:#258044;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>FINDIT</h1>
+  <p>Lost & Found SMP Negeri 4 Kalasan</p>
+</header>
+
+<div class="container">
+
+  <div class="search">
+
+    <input
+      id="searchInput"
+      type="text"
+      placeholder="Cari barang, warna, lokasi..."
+      oninput="renderReports()"
+    >
+
+    <div class="filters">
+
+      <select id="dateFilter" onchange="renderReports()">
+        <option value="">Semua tanggal</option>
+      </select>
+
+      <select id="statusFilter" onchange="renderReports()">
+        <option value="">Semua status</option>
+        <option value="lost">Belum ditemukan</option>
+        <option value="found">Sudah ditemukan</option>
+      </select>
+
+    </div>
+
+  </div>
+
+  <div id="reportsContainer">
+    <div class="loading">
+      Memuat laporan...
+    </div>
+  </div>
+
+</div>
+
+<button class="plus" onclick="openChoice()">+</button>
+
+
+<!-- =========================
+     PILIH JENIS LAPORAN
+========================= -->
+
+<div class="modal" id="choiceModal">
+
+  <div class="modal-box">
+
+    <button class="close" onclick="closeAll()">×</button>
+
+    <h2>Buat Laporan</h2>
+
+    <button class="choice" onclick="showForm('found')">
+      🔎 Saya Menemukan Barang
+    </button>
+
+    <button class="choice" onclick="showForm('lost')">
+      📢 Saya Kehilangan Barang
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- =========================
+     FORM LAPORAN
+========================= -->
+
+<div class="modal" id="reportModal">
+
+  <div class="modal-box">
+
+    <button class="close" onclick="closeAll()">×</button>
+
+    <h2 id="formTitle">Laporan</h2>
+
+    <form id="reportForm">
+
+      <input type="hidden" id="jenis">
+
+      <label>Foto Barang</label>
+
+      <label class="photo-btn">
+        📷 Ambil Foto dari Kamera
+        <input
+          class="hidden"
+          id="cameraInput"
+          type="file"
+          accept="image/*"
+          capture="environment"
+        >
+      </label>
+
+      <label class="photo-btn">
+        🖼️ Pilih dari Galeri
+        <input
+          class="hidden"
+          id="galleryInput"
+          type="file"
+          accept="image/*"
+        >
+      </label>
+
+      <img id="preview" class="preview">
+
+
+      <label>Jenis Barang</label>
+
+      <input
+        id="namaBarang"
+        type="text"
+        placeholder="Contoh: Dompet, botol minum, buku..."
+        required
+      >
+
+
+      <label>Warna</label>
+
+      <input
+        id="warna"
+        type="text"
+        placeholder="Contoh: Hitam"
+        required
+      >
+
+
+      <label id="tanggalLabel">
+        Tanggal
+      </label>
+
+      <input
+        id="tanggal"
+        type="date"
+        required
+      >
+
+
+      <label>Lokasi</label>
+
+      <input
+        id="lokasi"
+        type="text"
+        placeholder="Contoh: Kelas 8A"
+        required
+      >
+
+
+      <label>Deskripsi</label>
+
+      <textarea
+        id="deskripsi"
+        placeholder="Jelaskan ciri-ciri barang..."
+        required
+      ></textarea>
+
+
+      <button class="submit" type="submit">
+        Kirim Laporan
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- =========================
+     FORM KLAIM
+========================= -->
+
+<div class="modal" id="claimModal">
+
+  <div class="modal-box">
+
+    <button class="close" onclick="closeAll()">×</button>
+
+    <h2>Klaim Barang</h2>
+
+    <div id="claimItemInfo" class="claim-info"></div>
+
+    <form id="claimForm">
+
+      <input
+        type="hidden"
+        id="claimReportId"
+      >
+
+
+      <label>Nama</label>
+
+      <input
+        id="claimName"
+        type="text"
+        placeholder="Masukkan nama"
+        required
+      >
+
+
+      <label>Kelas</label>
+
+      <input
+        id="claimClass"
+        type="text"
+        placeholder="Contoh: 8A"
+        required
+      >
+
+
+      <label>Ciri khusus barang</label>
+
+      <textarea
+        id="claimCharacteristic"
+        placeholder="Sebutkan ciri yang hanya diketahui pemilik..."
+        required
+      ></textarea>
+
+
+      <label>Terakhir melihat barang</label>
+
+      <input
+        id="claimLastSeen"
+        type="text"
+        placeholder="Contoh: di kelas saat istirahat"
+        required
+      >
+
+
+      <label>Foto barang (opsional)</label>
+
+      <label class="photo-btn">
+        📷 Ambil Foto
+        <input
+          class="hidden"
+          id="claimCamera"
+          type="file"
+          accept="image/*"
+          capture="environment"
+        >
+      </label>
+
+
+      <label class="photo-btn">
+        🖼️ Pilih dari Galeri
+        <input
+          class="hidden"
+          id="claimGallery"
+          type="file"
+          accept="image/*"
+        >
+      </label>
+
+
+      <img
+        id="claimPreview"
+        class="preview"
+      >
+
+
+      <label>
+        Apakah sudah disetujui guru?
+      </label>
+
+      <select
+        id="teacherApproved"
+        required
+      >
+
+        <option value="">
+          Pilih
+        </option>
+
+        <option value="Ya">
+          Ya
+        </option>
+
+        <option value="Belum">
+          Belum
+        </option>
+
+      </select>
+
+
+      <button
+        class="submit"
+        type="submit"
+      >
+        Kirim Klaim
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<script>
+
+/* =========================
+   GOOGLE APPS SCRIPT
+========================= */
+
+const API_URL =
+"https://script.google.com/macros/s/AKfycbwPGbfIBhehclwIpdmnmNPXIa-5wP-OKjC8EKXMGFjdrbV0_c3iIOl_gxoZ5TOz31Cyvg/exec";
+
+
+let reports = [];
+
+let selectedPhoto = "";
+
+let claimPhoto = "";
+
+let selectedClaimId = "";
+
+
+/* =========================
+   MODAL
+========================= */
+
+function openChoice(){
+
+  document.getElementById(
+    "choiceModal"
+  ).style.display="flex";
+
+}
+
+
+function closeAll(){
+
+  document.getElementById(
+    "choiceModal"
+  ).style.display="none";
+
+  document.getElementById(
+    "reportModal"
+  ).style.display="none";
+
+  document.getElementById(
+    "claimModal"
+  ).style.display="none";
+
+}
+
+
+/* =========================
+   FORM LAPORAN
+========================= */
+
+function showForm(type){
+
+  closeAll();
+
+  const form =
+    document.getElementById("reportForm");
+
+  form.reset();
+
+  document.getElementById(
+    "jenis"
+  ).value=type;
+
+  selectedPhoto="";
+
+  document.getElementById(
+    "preview"
+  ).style.display="none";
+
+
+  if(type==="found"){
+
+    document.getElementById(
+      "formTitle"
+    ).innerText =
+      "Saya Menemukan Barang";
+
+    document.getElementById(
+      "tanggalLabel"
+    ).innerText =
+      "Tanggal Ditemukan";
+
+  }else{
+
+    document.getElementById(
+      "formTitle"
+    ).innerText =
+      "Saya Kehilangan Barang";
+
+    document.getElementById(
+      "tanggalLabel"
+    ).innerText =
+      "Tanggal Kehilangan";
+
+  }
+
+
+  document.getElementById(
+    "reportModal"
+  ).style.display="flex";
+
+}
+
+
+/* =========================
+   UBAH FOTO MENJADI BASE64
+========================= */
+
+function imageToBase64(file){
+
+  return new Promise((resolve,reject)=>{
+
+    if(!file){
+
+      resolve("");
+
+      return;
+
+    }
+
+
+    const reader =
+      new FileReader();
+
+
+    reader.onload=function(event){
+
+      const img =
+        new Image();
+
+
+      img.onload=function(){
+
+        const canvas =
+          document.createElement(
+            "canvas"
+          );
+
+
+        const maxWidth=900;
+
+        let width=img.width;
+
+        let height=img.height;
+
+
+        if(width>maxWidth){
+
+          height =
+            height *
+            maxWidth /
+            width;
+
+          width=maxWidth;
+
+        }
+
+
+        canvas.width=width;
+
+        canvas.height=height;
+
+
+        const ctx =
+          canvas.getContext("2d");
+
+
+        ctx.drawImage(
+          img,
+          0,
+          0,
+          width,
+          height
+        );
+
+
+        const base64 =
+          canvas.toDataURL(
+            "image/jpeg",
+            0.55
+          );
+
+
+        resolve(base64);
+
+      };
+
+
+      img.onerror=reject;
+
+      img.src=
+        event.target.result;
+
+    };
+
+
+    reader.onerror=reject;
+
+    reader.readAsDataURL(file);
+
+  });
+
+}
+
+
+/* =========================
+   FOTO LAPORAN
+========================= */
+
+async function handlePhoto(input){
+
+  const file =
+    input.files[0];
+
+  if(!file) return;
+
+
+  selectedPhoto =
+    await imageToBase64(file);
+
+
+  const preview =
+    document.getElementById(
+      "preview"
+    );
+
+
+  preview.src =
+    selectedPhoto;
+
+  preview.style.display =
+    "block";
+
+}
+
+
+document.getElementById(
+  "cameraInput"
+)
+.addEventListener(
+  "change",
+  function(){
+
+    handlePhoto(this);
+
+  }
+);
+
+
+document.getElementById(
+  "galleryInput"
+)
+.addEventListener(
+  "change",
+  function(){
+
+    handlePhoto(this);
+
+  }
+);
+
+
+/* =========================
+   FOTO KLAIM
+========================= */
+
+async function handleClaimPhoto(input){
+
+  const file =
+    input.files[0];
+
+  if(!file) return;
+
+
+  claimPhoto =
+    await imageToBase64(file);
+
+
+  const preview =
+    document.getElementById(
+      "claimPreview"
+    );
+
+
+  preview.src =
+    claimPhoto;
+
+  preview.style.display =
+    "block";
+
+}
+
+
+document.getElementById(
+  "claimCamera"
+)
+.addEventListener(
+  "change",
+  function(){
+
+    handleClaimPhoto(this);
+
+  }
+);
+
+
+document.getElementById(
+  "claimGallery"
+)
+.addEventListener(
+  "change",
+  function(){
+
+    handleClaimPhoto(this);
+
+  }
+);
+
+
+/* =========================
+   KIRIM LAPORAN
+========================= */
+
+document.getElementById(
+  "reportForm"
+)
+.addEventListener(
+  "submit",
+  async function(event){
+
+    event.preventDefault();
+
+
+    const button =
+      this.querySelector(
+        ".submit"
+      );
+
+
+    button.disabled=true;
+
+    button.innerText=
+      "Mengirim...";
+
+
+    const data={
+
+      jenis:
+        document.getElementById(
+          "jenis"
+        ).value,
+
+      namaBarang:
+        document.getElementById(
+          "namaBarang"
+        ).value,
+
+      warna:
+        document.getElementById(
+          "warna"
+        ).value,
+
+      tanggal:
+        document.getElementById(
+          "tanggal"
+        ).value,
+
+      lokasi:
+        document.getElementById(
+          "lokasi"
+        ).value,
+
+      deskripsi:
+        document.getElementById(
+          "deskripsi"
+        ).value,
+
+      foto:
+        selectedPhoto,
+
+      status:
+        document.getElementById(
+          "jenis"
+        ).value==="found"
+        ? "found"
+        : "lost"
+
+    };
+
+
+    try{
+
+      const response =
+        await fetch(
+          API_URL,
+          {
+            method:"POST",
+
+            headers:{
+              "Content-Type":
+                "text/plain;charset=utf-8"
+            },
+
+            body:
+              JSON.stringify(data)
+          }
+        );
+
+
+      const result =
+        await response.json();
+
+
+      if(!result.success){
+
+        throw new Error(
+          result.message ||
+          "Gagal menyimpan laporan"
+        );
+
+      }
+
+
+      alert(
+        data.status==="found"
+        ?
+        "Terima kasih sudah membantu menemukan barang! 💚"
+        :
+        "Laporan kehilangan berhasil dikirim."
+      );
+
+
+      closeAll();
+
+      this.reset();
+
+      selectedPhoto="";
+
+
+      document.getElementById(
+        "preview"
+      ).style.display="none";
+
+
+      loadReports();
+
+
+    }catch(error){
+
+      console.error(error);
+
+      alert(
+        "Laporan gagal dikirim. Coba lagi."
+      );
+
+    }
+
+
+    button.disabled=false;
+
+    button.innerText=
+      "Kirim Laporan";
+
+  }
+);
+
+
+/* =========================
+   LOAD LAPORAN
+========================= */
+
+async function loadReports(){
+
+  const container =
+    document.getElementById(
+      "reportsContainer"
+    );
+
+
+  container.innerHTML=
+    '<div class="loading">Memuat laporan...</div>';
+
+
+  try{
+
+    const response =
+      await fetch(API_URL);
+
+
+    if(!response.ok){
+
+      throw new Error(
+        "Gagal mengambil data"
+      );
+
+    }
+
+
+    reports =
+      await response.json();
+
+
+    if(!Array.isArray(reports)){
+
+      reports=[];
+
+    }
+
+
+    createDateFilter();
+
+    renderReports();
+
+
+  }catch(error){
+
+    console.error(error);
+
+
+    container.innerHTML=
+      '<div class="empty">Gagal memuat laporan.</div>';
+
+  }
+
+}
+
+
+/* =========================
+   FILTER TANGGAL
+========================= */
+
+function createDateFilter(){
+
+  const select =
+    document.getElementById(
+      "dateFilter"
+    );
+
+
+  const current =
+    select.value;
+
+
+  const dates =
+    [
+      ...new Set(
+        reports
+        .map(
+          item=>item["Tanggal"]
+        )
+        .filter(Boolean)
+      )
+    ];
+
+
+  select.innerHTML=
+    '<option value="">Semua tanggal</option>';
+
+
+  dates.sort();
+
+
+  dates.forEach(date=>{
+
+    const option =
+      document.createElement(
+        "option"
+      );
+
+
+    option.value=date;
+
+    option.textContent=date;
+
+
+    select.appendChild(
+      option
+    );
+
+  });
+
+
+  select.value=current;
+
+}
+
+
+/* =========================
+   AMANKAN HTML
+========================= */
+
+function escapeHTML(value){
+
+  if(
+    value===undefined ||
+    value===null
+  ){
+
+    return "";
+
+  }
+
+
+  return String(value)
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+/* =========================
+   TAMPILKAN LAPORAN
+========================= */
+
+function renderReports(){
+
+  const container =
+    document.getElementById(
+      "reportsContainer"
+    );
+
+
+  const search =
+    document.getElementById(
+      "searchInput"
+    )
+    .value
+    .toLowerCase();
+
+
+  const date =
+    document.getElementById(
+      "dateFilter"
+    ).value;
+
+
+  const status =
+    document.getElementById(
+      "statusFilter"
+    ).value;
+
+
+  const filtered =
+    reports.filter(item=>{
+
+      const text=[
+
+        item["Nama Barang"],
+
+        item["Warna"],
+
+        item["Lokasi"],
+
+        item["Deskripsi"]
+
+      ]
+      .join(" ")
+      .toLowerCase();
+
+
+      const matchSearch =
+        text.includes(search);
+
+
+      const matchDate =
+        !date ||
+        item["Tanggal"]===date;
+
+
+      const matchStatus =
+        !status ||
+        item["Status"]===status;
+
+
+      return(
+        matchSearch &&
+        matchDate &&
+        matchStatus
+      );
+
+    });
+
+
+  if(filtered.length===0){
+
+    container.innerHTML=
+      '<div class="empty">Belum ada laporan yang sesuai.</div>';
+
+    return;
+
+  }
+
+
+  container.innerHTML="";
+
+
+  filtered.forEach(item=>{
+
+    const card =
+      document.createElement(
+        "div"
+      );
+
+
+    card.className="card";
+
+
+    let photoHTML="";
+
+
+    if(item["Foto"]){
+
+      photoHTML=
+        `
+        <img
+          src="${escapeHTML(item["Foto"])}"
+          alt="Foto barang"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+        >
+
+        <div
+          class="no-photo"
+          style="display:none;"
+        >
+          Foto tidak dapat ditampilkan
+        </div>
+        `;
+
+    }else{
+
+      photoHTML=
+        `
+        <div class="no-photo">
+          Foto tidak tersedia
+        </div>
+        `;
+
+    }
+
+
+    const isFound =
+      item["Status"]==="found";
+
+
+    const statusClass =
+      isFound
+      ? "found"
+      : "lost";
+
+
+    const statusText =
+      isFound
+      ? "SUDAH DITEMUKAN"
+      : "BELUM DITEMUKAN";
+
+
+    card.innerHTML=
+
+      `
+
+      ${photoHTML}
+
+      <div class="content">
+
+        <span class="status ${statusClass}">
+          ${statusText}
+        </span>
+
+
+        <h2>
+          ${escapeHTML(
+            item["Nama Barang"]
+          )}
+        </h2>
+
+
+        <p>
+          <b>Warna:</b>
+          ${escapeHTML(
+            item["Warna"]
+          )}
+        </p>
+
+
+        <p>
+          <b>Tanggal:</b>
+          ${escapeHTML(
+            item["Tanggal"]
+          )}
+        </p>
+
+
+        <p>
+          <b>Lokasi:</b>
+          ${escapeHTML(
+            item["Lokasi"]
+          )}
+        </p>
+
+
+        <p>
+          <b>Deskripsi:</b>
+          ${escapeHTML(
+            item["Deskripsi"]
+          )}
+        </p>
+
+
+        ${
+          isFound
+          ?
+          `
+          <button
+            class="submit"
+            onclick="openClaim('${escapeHTML(item["ID"])}')"
+          >
+            Klaim Barang
+          </button>
+          `
+          :
+          ""
+        }
+
+      </div>
+
+      `;
+
+
+    container.appendChild(
+      card
+    );
+
+  });
+
+}
+
+
+/* =========================
+   BUKA KLAIM
+========================= */
+
+function openClaim(id){
+
+  selectedClaimId=id;
+
+
+  document.getElementById(
+    "claimReportId"
+  ).value=id;
+
+
+  const item =
+    reports.find(
+      report =>
+        String(report["ID"]) ===
+        String(id)
+    );
+
+
+  if(item){
+
+    document.getElementById(
+      "claimItemInfo"
+    ).innerHTML=
+
+      `
+      <b>Barang:</b>
+      ${escapeHTML(
+        item["Nama Barang"]
+      )}
+      <br>
+
+      <b>Warna:</b>
+      ${escapeHTML(
+        item["Warna"]
+      )}
+      <br>
+
+      <b>Lokasi:</b>
+      ${escapeHTML(
+        item["Lokasi"]
+      )}
+      `;
+
+  }
+
+
+  document.getElementById(
+    "claimForm"
+  ).reset();
+
+
+  document.getElementById(
+    "claimReportId"
+  ).value=id;
+
+
+  claimPhoto="";
+
+
+  document.getElementById(
+    "claimPreview"
+  ).style.display="none";
+
+
+  document.getElementById(
+    "claimModal"
+  ).style.display="flex";
+
+}
+
+
+/* =========================
+   KIRIM KLAIM
+========================= */
+
+document.getElementById(
+  "claimForm"
+)
+.addEventListener(
+  "submit",
+  async function(event){
+
+    event.preventDefault();
+
+
+    const button =
+      this.querySelector(
+        ".submit"
+      );
+
+
+    button.disabled=true;
+
+    button.innerText=
+      "Mengirim...";
+
+
+    const data={
+
+      reportId:
+        document.getElementById(
+          "claimReportId"
+        ).value,
+
+      nama:
+        document.getElementById(
+          "claimName"
+        ).value,
+
+      kelas:
+        document.getElementById(
+          "claimClass"
+        ).value,
+
+      ciri:
+        document.getElementById(
+          "claimCharacteristic"
+        ).value,
+
+      terakhirDilihat:
+        document.getElementById(
+          "claimLastSeen"
+        ).value,
+
+      foto:
+        claimPhoto,
+
+      persetujuanGuru:
+        document.getElementById(
+          "teacherApproved"
+        ).value
+
+    };
+
+
+    try{
+
+      const response =
+        await fetch(
+          API_URL,
+          {
+            method:"POST",
+
+            headers:{
+              "Content-Type":
+                "text/plain;charset=utf-8"
+            },
+
+            body:
+              JSON.stringify({
+                type:"claim",
+                data:data
+              })
+
+          }
+        );
+
+
+      const result =
+        await response.json();
+
+
+      if(!result.success){
+
+        throw new Error(
+          result.message ||
+          "Klaim gagal"
+        );
+
+      }
+
+
+      alert(
+        "Klaim berhasil dikirim. Terima kasih!"
+      );
+
+
+      closeAll();
+
+      this.reset();
+
+      claimPhoto="";
+
+
+      document.getElementById(
+        "claimPreview"
+      ).style.display="none";
+
+
+    }catch(error){
+
+      console.error(error);
+
+      alert(
+        "Klaim gagal dikirim. Coba lagi."
+      );
+
+    }
+
+
+    button.disabled=false;
+
+    button.innerText=
+      "Kirim Klaim";
+
+  }
+);
+
+
+/* =========================
+   JALANKAN WEBSITE
+========================= */
+
+loadReports();
+
+</script>
+
+</body>
+</html>
